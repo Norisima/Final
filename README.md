@@ -1,5 +1,5 @@
 # Final
-tarea final
+Tarea Final  
 #TROGONES CON COSTA RICA
 
 Se han utilizado datos de Infraestructura Mundial de Información en Biodiversidad (GBIF) (https://www.gbif.org/occurrence/search) para descargar los datos de la familia de Trogones en Costa Rica.   Donde se ha disminuido el número de registros debido a que son demasiados valores para que la computadora pueda procesar. 
