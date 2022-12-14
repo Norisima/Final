@@ -1,0 +1,184 @@
+---
+title: "Trogones de Costa Rica"
+format: 
+  html:
+    theme: cosmo
+    page-layout: custom
+server: shiny
+author: "Nora Machuca Mejia y Carlos "
+---
+
+```{r}
+#| label: inicio
+#| context: setup
+#| message: false
+#| warning: false
+
+# Bloque para operaciones iniciales
+library(tidyverse) #Carga de tidyverse (incluye ggplot3 y readr)
+library(plotly) # Carga de plotly
+library(DT) # Carga de DT
+library(dplyr) # Carga de dplyr
+library(sf) #Carga de sf
+library(leaflet) #Carga de leaflet para mapas interactivos
+library(data.table)
+library(shiny)
+library(rsconnect)
+```
+
+```{r}
+#| label: lectura-datos
+#| context: data
+
+archivo_dwc <- "quetzal.csv"
+# Lectura del archivo DwC
+registros <-
+  st_read(
+    archivo_dwc,
+    options = c(
+      "X_POSSIBLE_NAMES=decimalLongitude", # columna de longitud decimal
+      "Y_POSSIBLE_NAMES=decimalLatitude" 
+    ),
+    quiet = TRUE
+  )
+
+asp <-
+  st_read(
+    "Areassilvestresprotegidas.shp",
+    options = "ENCODING=UTF8",
+    quiet = TRUE # para evitar el despliegue de mensajes
+  )
+
+```
+
+
+## Mapa de Registros
+
+```{r}
+#| panel: sidebar
+lista_especies_map <- unique(registros$species) #obtener valores 
+llista_especies_map <- sort(lista_especies_map) #ordenar
+lista_especies_map <- c("Todas", lista_especies_map) #agregar opción todas
+
+# Selector de especies
+selectInput(
+  inputId = "especie_map",
+  label = "Especie",
+  choices = lista_especies_map,
+  selected = "Todas"
+)
+
+#Lita años
+lista_anios_map <- unique(registros$year) #obtener valores 
+lista_anios_map <- sort(lista_anios_map) #ordenar
+lista_anios_map <- c("Todos", lista_anios_map) #agregar opción todas
+
+# Selector de especies
+selectInput(
+  inputId = "anio_map",
+  label = "Año",
+  choices = lista_anios_map,
+  selected = "Todos"
+)
+
+#Provincias
+lista_provincia_map <- unique(registros$stateProvince) #obtener valores 
+lista_provincia_map <- sort(lista_provincia_map) #ordenar
+lista_provincia_map <- c("Todas", lista_provincia_map) #agregar opción todas
+
+# Seleccion Provincias
+selectInput(
+  inputId = "provincia_map",
+  label = "Provincia",
+  choices = lista_provincia_map,
+  selected = "Todas"
+)
+
+```
+
+```{r}
+#| panel: fill
+
+leafletOutput("mymap")
+
+```
+
+```{r}
+#| label: servidor-mapa
+#| context: server
+#| warning: false
+
+filtrarRegistros_map <- reactive({
+  # Valor inicial del objeto que va a retornarse
+  registros_filtrados_map <- registros
+  
+  if (input$especie_map != "Todas") {
+    registros_filtrados_map <-
+      registros_filtrados_map |>
+      filter(species == input$especie_map)
+  }
+  
+    if (input$anio_map != "Todos") {
+    registros_filtrados_map <-
+      registros_filtrados_map |>
+      filter(year == input$anio_map)
+  }
+  
+  if (input$provincia_map != "Todas") {
+    registros_filtrados_map <-
+      registros_filtrados_map |>
+      filter(stateProvince == input$provincia_map)
+  }
+  
+  return(registros_filtrados_map)
+})  
+
+output$mymap <- renderLeaflet({
+  
+  registros <- filtrarRegistros_map()
+  
+  
+leaflet() |>
+  setView(# centro y nivel inicial de acercamiento
+   lng = -84.19452,
+    lat = 9.572735,
+    zoom = 7) |>
+  addTiles(group = "OpenStreetMap") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap) |>
+  addPolygons(
+    # capa de provincias (polígonos)
+    data = asp,
+    color = "black",
+    fillColor = "transparent",
+    stroke = TRUE,
+    weight = 1.3,
+    group = "ASP",
+    popup = paste(
+      paste0("<strong>Provincia: </strong>", registros$stateProvince),
+      sep = '<br/>')
+    ) |>
+  addCircleMarkers(
+    # capa de registros de presencia (puntos)
+    data = registros,
+    stroke = F,
+    radius = 5,
+    fillColor = 'darkblue',
+    fillOpacity = 1,
+    group = "Trogones",
+    popup = paste(
+      paste0("<strong>Especie: </strong>", registros$species ), 
+      paste0("<br><strong>Provincia: </strong>", registros$stateProvince ), 
+      paste0("<br><strong>Localidad: </strong>", registros$locality), 
+      paste0("<br><strong>Fecha: </strong>", registros$eventDate )
+    )#<br> asigna una nueva línea para  una mejor visualización en el popup.
+  ) |>
+  addLayersControl(
+    baseGroups = c("OpenStreetMap", "Esri.NatGeoWorldMap"),
+    overlayGroups = c("Trogones", "ASP")) |> # control de capas
+  addScaleBar(position = "bottomright", options = scaleBarOptions(imperial = FALSE)) |> # barra de escala
+  addMiniMap(position = "bottomleft")  # mapa de ubicación
+
+})
+
+```
+

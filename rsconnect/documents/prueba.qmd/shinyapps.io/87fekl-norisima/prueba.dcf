@@ -1,0 +1,15 @@
+name: prueba
+title: prueba
+username:
+account: 87fekl-norisima
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7888084
+bundleId: 6633955
+url: https://87fekl-norisima.shinyapps.io/prueba/
+when: 1670976140.3006
+lastSyncTime: 1670976140.30062
+quarto_version: 1.0.36
+quarto_engines: knitr
+asMultiple: FALSE
+asStatic: FALSE

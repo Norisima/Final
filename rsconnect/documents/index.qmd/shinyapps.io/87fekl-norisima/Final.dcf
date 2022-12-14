@@ -1,0 +1,16 @@
+name: Final
+title: Final
+username:
+account: 87fekl-norisima
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7886896
+bundleId: 6633913
+url: https://87fekl-norisima.shinyapps.io/Final/
+when: 1670974980.42314
+lastSyncTime: 1670974980.42317
+quarto_version: 1.0.36
+quarto_engines: knitr
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: altitud.tif|quetzal - copia.csv|quetzal.xls
